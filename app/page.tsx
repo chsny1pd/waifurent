@@ -1,100 +1,119 @@
-// import Image from "next/image";
+'use client'
 
-// export default function Home() {
-//   return (
-//     <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-//       <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-//         <Image
-//           className="dark:invert"
-//           src="/next.svg"
-//           alt="Next.js logo"
-//           width={100}
-//           height={20}
-//           priority
-//         />
-//         <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-//           <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-//             To get started, edit the page.tsx file.
-//           </h1>
-//           <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-//             Looking for a starting point or more instructions? Head over to{" "}
-//             <a
-//               href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-//               className="font-medium text-zinc-950 dark:text-zinc-50"
-//             >
-//               Templates
-//             </a>{" "}
-//             or the{" "}
-//             <a
-//               href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-//               className="font-medium text-zinc-950 dark:text-zinc-50"
-//             >
-//               Learning
-//             </a>{" "}
-//             center.
-//           </p>
-//         </div>
-//         <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-//           <a
-//             className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-//             href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-//             target="_blank"
-//             rel="noopener noreferrer"
-//           >
-//             <Image
-//               className="dark:invert"
-//               src="/vercel.svg"
-//               alt="Vercel logomark"
-//               width={16}
-//               height={16}
-//             />
-//             Deploy Now
-//           </a>
-//           <a
-//             className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-//             href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-//             target="_blank"
-//             rel="noopener noreferrer"
-//           >
-//             Documentation
-//           </a>
-//         </div>
-//       </main>
-//     </div>
-//   );
-// }
+import { useState, useEffect } from 'react'
+import { createBrowserClient } from '@supabase/ssr'
+import { useRouter } from 'next/navigation'
 
-// src/app/page.tsx
-import { createClient } from '@/lib/supabase/server'
-import { signout } from '@/features/auth/actions'
+export default function LandingPage() {
+  const router = useRouter()
+  const [user, setUser] = useState<any>(null)
+  const [activeTab, setActiveTab] = useState('หน้าหลัก')
+  
+  const supabase = createBrowserClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  )
 
-export default async function Home() {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  const topWaifus = [
+    {
+      name: "Makima",
+      quote: "ถ้าเป็นสุนัขที่ซื่อสัตย์ ฉันจะดูแลอย่างดีค่ะ...",
+      ranking: "🏆 TOP 1 POPULAR VOTE",
+      landscapeImg: "https://images.unsplash.com/photo-1607604276583-eef5d076aa5f?w=1200&q=80",
+      images: [
+        "https://images.unsplash.com/photo-1607604276583-eef5d076aa5f?w=400&q=80",
+        "https://images.unsplash.com/photo-1578632767115-351597cf2477?w=400&q=80",
+        "https://images.unsplash.com/photo-1560942485-b2a11cc13456?w=400&q=80",
+        "https://images.unsplash.com/photo-1620641788421-7a1c342ea42e?w=400&q=80"
+      ]
+    }
+  ]
+
+  useEffect(() => {
+    const checkUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser()
+      setUser(user)
+    }
+    checkUser()
+  }, [supabase])
+
+  const navItems = ['หน้าหลัก', 'รีวิวจากลูกค้า', 'เลือกตัวละคร']
 
   return (
-    <div className="p-8 max-w-xl mx-auto text-center space-y-6">
-      <h1 className="text-3xl font-bold">Welcome to Rent-a-Mate Project</h1>
-      
-      {user ? (
-        <div className="p-6 bg-green-50 rounded-xl border border-green-200 space-y-3">
-          <p className="text-green-700 font-medium">Hello! You are logged in.</p>
-          <p className="text-xs text-slate-500 bg-white p-2 rounded border">{user.email}</p>
+    <div className="min-h-screen bg-[#fffcf9] text-slate-800">
+      <link href="https://fonts.googleapis.com/css2?family=Itim&family=Kanit:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+      <style jsx global>{`
+        body { font-family: 'Kanit', sans-serif; }
+        .font-cute { font-family: 'Itim', sans-serif; }
+      `}</style>
+
+      {/* Navbar - Functional */}
+      <nav className="bg-white/80 backdrop-blur-lg border-b border-pink-100 sticky top-0 z-50">
+        <div className="max-w-[1600px] mx-auto px-8 py-4 flex justify-between items-center">
+          <div className="flex items-center gap-3 cursor-pointer" onClick={() => router.push('/')}>
+            <div className="w-10 h-10 bg-gradient-to-tr from-pink-500 to-rose-400 rounded-xl flex items-center justify-center text-white text-xl shadow-md">🌸</div>
+            <span className="text-2xl font-cute font-bold text-pink-600">WaifuRent</span>
+          </div>
           
-          <form action={signout}>
-            <button type="submit" className="px-4 py-2 bg-red-500 text-white rounded-lg text-sm font-medium hover:bg-red-600 transition">
-              Sign Out
-            </button>
-          </form>
+          <div className="hidden md:flex gap-2 bg-pink-50/50 p-1.5 rounded-2xl border border-pink-100">
+            {navItems.map((item) => (
+              <button 
+                key={item} 
+                onClick={() => setActiveTab(item)}
+                className={`px-6 py-2 rounded-xl text-sm font-semibold transition-all duration-300 ${activeTab === item ? 'bg-white text-pink-600 shadow-sm' : 'text-slate-500 hover:text-pink-600'}`}
+              >
+                {item}
+              </button>
+            ))}
+          </div>
+          
+          <div className="flex items-center gap-3 border border-pink-100 px-4 py-2 rounded-2xl bg-white shadow-sm">
+            <span className="text-sm font-bold text-slate-600">{user?.user_metadata?.full_name || 'My ID'}</span>
+            <img src={user?.user_metadata?.avatar_url || "https://api.dicebear.com/7.x/adventurer/svg?seed=Felix"} className="w-9 h-9 rounded-full border-2 border-pink-200" />
+          </div>
         </div>
-      ) : (
-        <div className="p-6 bg-amber-50 rounded-xl border border-amber-200 space-y-3">
-          <p className="text-amber-700 font-medium">You are currently browsing as a Guest.</p>
-          <a href="/login" className="inline-block px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700 transition">
-            Go to Login Page
-          </a>
+      </nav>
+
+      {/* Hero Banner - With Cream Gradient */}
+      <div className="w-full bg-gradient-to-b from-orange-50/50 to-[#fff5f8] py-16">
+        <div className="max-w-[1600px] mx-auto px-12 flex flex-col lg:flex-row items-center gap-12">
+          <div className="w-full lg:w-1/3 space-y-6">
+            <span className="inline-block bg-pink-100 px-4 py-1 rounded-full text-xs font-bold text-pink-600 tracking-wider">{topWaifus[0].ranking}</span>
+            <h2 className="text-7xl font-cute font-bold text-slate-800 leading-tight">{topWaifus[0].name}</h2>
+            <p className="text-lg text-slate-600 italic bg-white/60 p-6 rounded-3xl border border-pink-100/50 shadow-inner">"{topWaifus[0].quote}"</p>
+            <button className="bg-gradient-to-r from-pink-500 to-rose-500 text-white px-10 py-4 rounded-2xl font-bold hover:shadow-xl hover:-translate-y-1 transition-all duration-300">เลือกเดตกับเธอคนนี้เลยค่า 💖</button>
+          </div>
+
+          <div className="w-full lg:w-1/3">
+            <img src={topWaifus[0].landscapeImg} className="w-full h-96 object-cover rounded-[2rem] shadow-2xl ring-8 ring-white" />
+          </div>
+
+          <div className="w-full lg:w-1/3 grid grid-cols-2 gap-4">
+            {topWaifus[0].images.map((img, i) => (
+              <img key={i} src={img} className="w-full h-40 object-cover rounded-2xl shadow-md hover:scale-105 hover:rotate-2 transition duration-500 cursor-pointer" />
+            ))}
+          </div>
         </div>
-      )}
+      </div>
+
+      <hr className="border-t border-pink-100 my-8 max-w-[1600px] mx-auto" />
+
+      {/* Content Section */}
+      <main className="max-w-[1600px] mx-auto p-12 space-y-20">
+        <section className="text-center py-10 space-y-6">
+          <h1 className="text-5xl font-cute font-bold text-slate-800">ค้นพบความฟินกับคู่เดตในฝัน 🥰</h1>
+          <button className="bg-slate-800 text-white px-16 py-5 rounded-2xl text-xl font-bold hover:bg-pink-600 transition">เริ่มออกเดตทันที 🚀</button>
+        </section>
+
+        <section className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="p-8 bg-white rounded-3xl border border-pink-100 shadow-sm hover:border-pink-300 transition-all duration-300">
+              <div className="text-amber-400 text-2xl mb-4">⭐⭐⭐⭐⭐</div>
+              <p className="text-lg text-slate-600 leading-relaxed font-cute">"ระบบแชท Realtime ตอบไวมากครับ ประทับใจดีไซน์ใหม่ที่ดูพรีเมียม สบายตา และใช้งานง่ายขึ้นมากจริงๆ ครับ!"</p>
+            </div>
+          ))}
+        </section>
+      </main>
     </div>
   )
 }
