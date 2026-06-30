@@ -1,10 +1,10 @@
-// app/bookings/new/page.tsx
 'use client'
 
 import { useState, useEffect } from 'react'
 import { createBrowserClient } from '@supabase/ssr'
 import { createBooking } from '@/features/bookings/actions'
 import { useRouter, useSearchParams } from 'next/navigation'
+import Link from 'next/link'
 
 interface Character {
   id: string
@@ -21,17 +21,13 @@ export default function NewBookingPage() {
 
   const [character, setCharacter] = useState<Character | null>(null)
   const [duration, setDuration] = useState<number>(1)
-  const [bookingType, setBookingType] = useState<string>('Chatting')
-  const [errorMsg, setErrorMsg] = useState<string | null>(null)
   const [loading, setLoading] = useState<boolean>(false)
 
-  // เรียกใช้ createBrowserClient ของ @supabase/ssr โดยตรง
   const supabase = createBrowserClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
   )
 
-  // ดึงข้อมูล Waifu ที่เลือกมาโชว์ในฟอร์มสรุปยอดเงิน
   useEffect(() => {
     if (!characterId) return
     const fetchCharacter = async () => {
@@ -45,115 +41,102 @@ export default function NewBookingPage() {
     fetchCharacter()
   }, [characterId, supabase])
 
-  if (!characterId) {
-    return <div className="p-8 text-center text-red-500">ไม่พบรหัสตัวละคร กรุณากลับไปเลือกใหม่</div>
-  }
-
-  if (!character) {
-    return <div className="p-8 text-center text-slate-500">กำลังโหลดข้อมูล Waifu...</div>
-  }
+  if (!characterId) return <div className="min-h-screen bg-[#050505] flex items-center justify-center text-white">ไม่พบรหัสตัวละคร</div>
+  if (!character) return <div className="min-h-screen bg-[#050505] flex items-center justify-center text-white">กำลังโหลด...</div>
 
   const totalPrice = character.price_per_hour * duration
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
-    setErrorMsg(null)
     setLoading(true)
-
+    
+    // สร้าง FormData จาก form element
     const formData = new FormData(e.currentTarget)
-    const result = await createBooking(formData)
+    
+    // สำคัญ: เพิ่ม total_price เข้าไปใน formData ก่อนส่ง
+    formData.append('total_price', totalPrice.toString())
+    
+    // เรียกใช้ action
+    const result = await createBooking(formData) as any
 
-    if (result?.error) {
-      setErrorMsg(result.error)
+    // ตรวจสอบผลลัพธ์ว่าสำเร็จไหม
+    if (result && !result.error) {
+      const bookingId = result.data?.id || ''
+      router.push(bookingId ? `/chats/${bookingId}` : '/chats')
+    } else {
+      alert(result?.error || 'เกิดข้อผิดพลาดในการจอง')
       setLoading(false)
     }
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md mx-auto bg-white rounded-3xl shadow-sm border border-slate-200 p-8 space-y-6">
+    <div className="min-h-screen bg-[#050505] text-white p-4 md:p-8 flex items-center justify-center">
+      <div className="w-full max-w-5xl bg-neutral-900 border border-neutral-800 rounded-3xl overflow-hidden shadow-2xl grid grid-cols-1 md:grid-cols-2">
         
-        <div className="text-center">
-          <h1 className="text-2xl font-bold text-slate-900">ยืนยันการจอง Mate</h1>
-          <p className="text-sm text-slate-500 mt-1">ตรวจสอบกิจกรรมและช่วงเวลาที่ต้องการทำร่วมกัน</p>
-        </div>
-
-        {/* Waifu Card Summary */}
-        <div className="flex items-center gap-4 bg-slate-50 p-4 rounded-2xl border border-slate-100">
-          <img src={character.avatar_url} alt={character.name} className="w-16 h-16 rounded-xl object-cover" />
-          <div>
-            <h3 className="font-bold text-slate-900">{character.name}</h3>
-            <p className="text-xs text-indigo-600 font-medium">{character.anime_name}</p>
-            <p className="text-sm text-slate-500 mt-1">฿{character.price_per_hour} / ชั่วโมง</p>
+        {/* ฝั่งซ้าย: รูปภาพตัวละคร */}
+        <div className="relative min-h-[300px] md:min-h-full bg-neutral-800">
+          <img 
+            src={character.avatar_url} 
+            alt={character.name}
+            className="w-full h-full object-cover"
+          />
+          <div className="absolute bottom-8 left-8">
+            <h1 className="text-4xl md:text-5xl font-black">{character.name}</h1>
+            <p className="text-pink-500 font-bold uppercase tracking-widest">{character.anime_name}</p>
           </div>
         </div>
 
-        {/* Booking Form */}
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <input type="hidden" name="characterId" value={character.id} />
-          <input type="hidden" name="pricePerHour" value={character.price_per_hour} />
-
-          {/* Select Activity */}
+        {/* ฝั่งขวา: ฟอร์มการจอง */}
+        <div className="p-8 md:p-12 flex flex-col justify-between">
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">เลือกประเภทกิจกรรม</label>
-            <select
-              name="bookingType"
-              value={bookingType}
-              onChange={(e) => setBookingType(e.target.value)}
-              className="w-full rounded-lg border border-slate-200 p-2.5 text-sm focus:border-indigo-500 focus:outline-none text-black"
-            >
-              <option value="Chatting">💬 Chatting (คุยแชทแก้เหงา)</option>
-              <option value="Gaming">🎮 Gaming (เล่นเกมด้วยกัน)</option>
-              <option value="Virtual Date">🌹 Virtual Date (ออกเดทเสมือนจริง)</option>
-              <option value="Story Roleplay">🎭 Story Roleplay (โรลเพลย์ตามบทบาท)</option>
-            </select>
+            <div className="flex justify-between items-center mb-8">
+              <h2 className="text-2xl font-bold">ยืนยันการจอง</h2>
+              <Link href={`/characters/${character.id}`} className="text-sm text-neutral-500 hover:text-white transition">
+                ← ย้อนกลับ
+              </Link>
+            </div>
+
+            <form onSubmit={handleSubmit} className="space-y-6">
+              <input type="hidden" name="characterId" value={character.id} />
+
+              <div>
+                <label className="block text-[10px] uppercase font-bold text-neutral-500 mb-2">ประเภทกิจกรรม</label>
+                <select name="bookingType" className="w-full bg-neutral-950 border border-neutral-800 rounded-xl p-3.5 text-sm focus:border-pink-500 focus:outline-none">
+                  <option value="Chatting">💬 Chatting (คุยแชทแก้เหงา)</option>
+                  <option value="Gaming">🎮 Gaming (เล่นเกมด้วยกัน)</option>
+                  <option value="Story Roleplay">🎭 Story Roleplay (โรลเพลย์ตามบทบาท)</option>
+                  <option value="Virtual Date">🌹 Virtual Date (ออกเดทเสมือนจริง)</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-[10px] uppercase font-bold text-neutral-500 mb-2">จำนวนเวลา (ชั่วโมง)</label>
+                <input name="duration" type="number" min="1" value={duration} onChange={(e) => setDuration(parseInt(e.target.value) || 1)}
+                  className="w-full bg-neutral-950 border border-neutral-800 rounded-xl p-3.5 text-sm focus:border-pink-500 focus:outline-none" />
+              </div>
+
+              <div>
+                <label className="block text-[10px] uppercase font-bold text-neutral-500 mb-2">นัดหมายวันที่</label>
+                <input name="scheduledAt" type="datetime-local" required className="w-full bg-neutral-950 border border-neutral-800 rounded-xl p-3.5 text-sm focus:border-pink-500 focus:outline-none [color-scheme:dark]" />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="bg-neutral-950 p-4 rounded-xl border border-neutral-800">
+                  <div className="text-[10px] text-neutral-500 uppercase font-bold">ราคารวม</div>
+                  <div className="text-2xl font-black text-pink-500">฿{totalPrice.toLocaleString()}</div>
+                </div>
+                <div className="bg-neutral-950 p-4 rounded-xl border border-neutral-800 flex items-center justify-center">
+                  <span className="text-emerald-400 text-xs font-bold uppercase">● พร้อมให้บริการ</span>
+                </div>
+              </div>
+
+              <button type="submit" disabled={loading}
+                className="w-full py-4 rounded-xl bg-pink-600 hover:bg-pink-700 font-bold transition shadow-lg shadow-pink-900/20">
+                {loading ? 'กำลังทำรายการ...' : 'ยืนยันและชำระเงิน 💳'}
+              </button>
+            </form>
           </div>
-
-          {/* Select Duration */}
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">จำนวนเวลาที่ต้องการเช่า (ชั่วโมง)</label>
-            <input
-              name="duration"
-              type="number"
-              min="1"
-              max="24"
-              value={duration}
-              onChange={(e) => setDuration(parseInt(e.target.value) || 1)}
-              className="w-full rounded-lg border border-slate-200 p-2.5 text-sm focus:border-indigo-500 focus:outline-none text-black"
-            />
-          </div>
-
-          {/* Select Schedule Date/Time */}
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">เลือกวันและเวลาที่นัดหมาย</label>
-            <input
-              name="scheduledAt"
-              type="datetime-local"
-              required
-              className="w-full rounded-lg border border-slate-200 p-2.5 text-sm focus:border-indigo-500 focus:outline-none text-black"
-            />
-          </div>
-
-          <hr className="border-slate-100 my-4" />
-
-          {/* Total Price Summary */}
-          <div className="flex justify-between items-center bg-indigo-50/50 p-4 rounded-xl border border-indigo-100">
-            <span className="text-sm font-medium text-slate-700">ยอดรวมทั้งสิ้น:</span>
-            <span className="text-xl font-black text-indigo-600">฿{totalPrice.toLocaleString()}</span>
-          </div>
-
-          {errorMsg && <div className="text-sm text-red-500 bg-red-50 p-3 rounded-lg">⚠️ {errorMsg}</div>}
-
-          {/* Submit Button */}
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full rounded-xl bg-indigo-600 py-3 text-sm font-bold text-white hover:bg-indigo-700 transition disabled:opacity-50"
-          >
-            {loading ? 'กำลังทำรายการ...' : 'ยืนยันและชำระเงิน 💳'}
-          </button>
-        </form>
-
+        </div>
       </div>
     </div>
   )
