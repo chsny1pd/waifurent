@@ -1,7 +1,9 @@
 'use client'
 
 import { useState } from 'react'
-import { login, signup } from '@/features/auth/actions'
+import { login, signup, loginWithGithub } from '@/features/auth/actions'
+import Link from 'next/link'
+
 
 export default function LoginPage() {
   const [isSignUp, setIsSignUp] = useState(false)
@@ -34,61 +36,73 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-slate-50 px-4">
-      <div className="w-full max-w-md space-y-6 rounded-2xl bg-white p-8 shadow-lg border border-slate-100">
+    <div className="flex min-h-screen items-center justify-center bg-[#0a0a0a] px-4 font-sans">
+      <div className="w-full max-w-md space-y-8 rounded-[2rem] bg-[#111111] p-10 border border-pink-900/30 shadow-[0_0_50px_rgba(219,39,119,0.1)]">
         
         <div className="text-center space-y-2">
-          <h1 className="text-3xl font-bold tracking-tight text-slate-900">
-            {isSignUp ? 'Create Account' : 'Welcome Back'}
+          <Link href="/" className="text-2xl font-bold text-pink-500 mb-6 block">🌸 WaifuRent</Link>
+          <h1 className="text-3xl font-bold text-white tracking-tight">
+            {isSignUp ? 'สร้างบัญชีใหม่' : 'ยินดีต้อนรับกลับมา'}
           </h1>
-          <p className="text-sm text-slate-500">
-            {isSignUp ? 'Sign up to rent your anime mate' : 'Sign in to chat with your mates'}
+          <p className="text-sm text-slate-400">
+            {isSignUp ? 'มาเริ่มสร้างความทรงจำสุดพิเศษกัน' : 'เข้าสู่ระบบเพื่อพูดคุยกับไอดอลของคุณ'}
           </p>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-5">
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">Email address</label>
+            <label className="block text-sm font-medium text-slate-300 mb-2">อีเมล</label>
             <input
               name="email"
               type="email"
               required
-              className="w-full rounded-lg border border-slate-200 p-2.5 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 text-black"
+              className="w-full rounded-2xl border border-pink-900/30 bg-black/50 p-4 text-sm text-white focus:border-pink-600 focus:outline-none focus:ring-1 focus:ring-pink-600 transition"
               placeholder="you@example.com"
             />
           </div>
           
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">Password</label>
+            <label className="block text-sm font-medium text-slate-300 mb-2">รหัสผ่าน</label>
             <input
               name="password"
               type="password"
               required
-              className="w-full rounded-lg border border-slate-200 p-2.5 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 text-black"
+              className="w-full rounded-2xl border border-pink-900/30 bg-black/50 p-4 text-sm text-white focus:border-pink-600 focus:outline-none focus:ring-1 focus:ring-pink-600 transition"
               placeholder="••••••••"
             />
           </div>
 
           {errorMsg && (
-            <div className="rounded-lg bg-red-50 p-3 text-sm text-red-500 font-medium">
-              ⚠️ {errorMsg}
+            <div className="rounded-xl bg-red-950/30 border border-red-900/50 p-3 text-sm text-red-400 font-medium text-center">
+              {errorMsg}
             </div>
           )}
 
           {successMsg && (
-            <div className="rounded-lg bg-green-50 p-3 text-sm text-green-600 font-medium">
-              🎉 {successMsg}
+            <div className="rounded-xl bg-green-950/30 border border-green-900/50 p-3 text-sm text-green-400 font-medium text-center">
+              {successMsg}
             </div>
           )}
 
           <button
             type="submit"
             disabled={loading}
-            className="w-full rounded-lg bg-indigo-600 p-2.5 text-sm font-semibold text-white hover:bg-indigo-700 transition disabled:opacity-50"
+            className="w-full rounded-2xl bg-gradient-to-r from-pink-600 to-purple-600 p-4 text-sm font-bold text-white hover:opacity-90 transition-all shadow-[0_0_20px_rgba(219,39,119,0.3)] disabled:opacity-50"
           >
-            {loading ? 'Processing...' : isSignUp ? 'Sign Up' : 'Sign In'}
+            {loading ? 'กำลังดำเนินการ...' : isSignUp ? 'ลงทะเบียน' : 'เข้าสู่ระบบ'}
           </button>
         </form>
+
+        <button
+            type="button"
+            onClick={async () => {
+              setLoading(true)
+              await loginWithGithub()
+            }}
+            className="w-full rounded-2xl border border-slate-700 bg-black p-4 text-sm font-bold text-white hover:border-pink-600 transition"
+          >
+            Continue with GitHub
+        </button>
 
         <div className="text-center">
           <button
@@ -98,12 +112,11 @@ export default function LoginPage() {
               setErrorMsg(null)
               setSuccessMsg(null)
             }}
-            className="text-sm font-medium text-indigo-600 hover:underline bg-transparent border-none cursor-pointer"
+            className="text-sm font-medium text-slate-400 hover:text-pink-500 transition underline underline-offset-4"
           >
-            {isSignUp ? 'Already have an account? Sign In' : "Don't have an account? Sign Up"}
+            {isSignUp ? 'มีบัญชีอยู่แล้ว? เข้าสู่ระบบ' : "ยังไม่มีบัญชี? สมัครสมาชิก"}
           </button>
         </div>
-
       </div>
     </div>
   )

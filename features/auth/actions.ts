@@ -18,7 +18,6 @@ export async function login(formData: FormData) {
     return { error: error.message }
   }
 
-  // เข้าสู่ระบบสำเร็จ ย้ายไปหน้าแรก
   redirect('/')
 }
 
@@ -31,20 +30,52 @@ export async function signup(formData: FormData) {
   const { error } = await supabase.auth.signUp({
     email,
     password,
-    options: {
-      emailRedirectTo: 'http://localhost:3000', // Redirect หลังกดยืนยันเมลเมล (ถ้าเปิดไว้)
-    },
   })
 
   if (error) {
     return { error: error.message }
   }
 
-  return { success: true, message: 'Sign up successful! Please check your email for confirmation.' }
+  return {
+    success: true,
+    message: 'Sign up successful!',
+  }
 }
 
 export async function signout() {
   const supabase = await createClient()
   await supabase.auth.signOut()
   redirect('/login')
+}
+
+export async function loginWithGithub() {
+  const supabase = await createClient()
+
+  const { data } = await supabase.auth.signInWithOAuth({
+    provider: 'github',
+    options: {
+      redirectTo: 'http://localhost:3000/auth/callback',
+    },
+  })
+
+  if (data.url) {
+    redirect(data.url)
+  }
+}
+
+export async function signInWithGithub() {
+  const supabase = await createClient()
+
+  const { data, error } = await supabase.auth.signInWithOAuth({
+    provider: 'github',
+    options: {
+      redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/auth/callback`
+    }
+  })
+
+  if (error) {
+    return { error: error.message }
+  }
+
+  redirect(data.url)
 }
